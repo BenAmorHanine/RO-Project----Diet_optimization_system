@@ -7,24 +7,24 @@ import matplotlib.pyplot as plt
 # Title
 st.title("TSP Optimization Problem Solver")
 
-# Number of cities
+# Number of variables
 st.header("Traveling Salesman Problem (TSP)")
-num_vars = st.number_input("Enter the number of cities:", value=3, step=1, min_value=2, max_value=10)
+num_vars = st.number_input("Enter the number of variables:", value=3, step=1, min_value=2, max_value=10)
 
-# Get city names and positions
-st.subheader("City Positions")
-city_names = []
-city_positions = []
+# Get variable names and positions
+st.subheader("variable Positions")
+variable_names = []
+variable_positions = []
 
 for i in range(num_vars):
     col1, col2 = st.columns(2)
     with col1:
-        city_name = st.text_input(f"City {i+1} Name:", value=f"City {i+1}")
-        city_names.append(city_name)
+        variable_name = st.text_input(f"variable {i+1} Name:", value=f"variable {i+1}")
+        variable_names.append(variable_name)
     with col2:
-        x = st.number_input(f"{city_name} X-coordinate:", value=float(i), key=f"x_{i}")
-        y = st.number_input(f"{city_name} Y-coordinate:", value=float(i), key=f"y_{i}")
-        city_positions.append((x, y))
+        x = st.number_input(f"{variable_name} X-coordinate:", value=float(i), step=0.5, key=f"x_{i}")
+        y = st.number_input(f"{variable_name} Y-coordinate:", value=float(i), step=0.5,  key=f"y_{i}")
+        variable_positions.append((x, y))
 
 # Calculate Distance Matrix
 st.subheader("Calculated Distance Matrix")
@@ -33,11 +33,11 @@ for i in range(num_vars):
     for j in range(num_vars):
         if i != j:
             dist = math.sqrt(
-                (city_positions[i][0] - city_positions[j][0]) ** 2 +
-                (city_positions[i][1] - city_positions[j][1]) ** 2
+                (variable_positions[i][0] - variable_positions[j][0]) ** 2 +
+                (variable_positions[i][1] - variable_positions[j][1]) ** 2
             )
             distances[(i, j)] = dist
-            st.write(f"Distance from {city_names[i]} to {city_names[j]}: {dist:.2f}")
+            st.write(f"Distance from {variable_names[i]} to {variable_names[j]}: {dist:.2f}")
 
 # Display the problem dynamically
 st.header("Mathematical Formulation ")
@@ -50,7 +50,7 @@ st.latex(objective_function)
 st.write("Subject to:")
 constraints_text = []
 for i in range(num_vars):
-    # Constraint for visiting each city exactly once
+    # Constraint for visiting each variable exactly once
     constraints_text.append(f"\\sum_{{j \\neq {i}}} x_{{i,j}} = 1")
     constraints_text.append(f"\\sum_{{j \\neq {i}}} x_{{j,i}} = 1")
 
@@ -63,20 +63,20 @@ st.latex("x_{ij} \\in \\{0, 1\\} \\quad \\forall i, j")
 col1, col2, col3 = st.columns([1, 3, 1])  # Adjust widths to center the Solve button
 
 # Function to plot positions and itinerary
-def plot_itinerary(city_positions, city_names, itinerary):
+def plot_itinerary(variable_positions, variable_names, itinerary):
     plt.figure(figsize=(8, 6))
-    x_coords = [pos[0] for pos in city_positions]
-    y_coords = [pos[1] for pos in city_positions]
+    x_coords = [pos[0] for pos in variable_positions]
+    y_coords = [pos[1] for pos in variable_positions]
     
-    # Plot cities
-    for i, (x, y) in enumerate(city_positions):
+    # Plot variables
+    for i, (x, y) in enumerate(variable_positions):
         plt.scatter(x, y, color="blue", s=100, zorder=5)
-        plt.text(x, y, f" {city_names[i]}", fontsize=12, zorder=6)
+        plt.text(x, y, f" {variable_names[i]}", fontsize=12, zorder=6)
     
     # Plot edges
     for i, j in itinerary:
-        x_start, y_start = city_positions[i]
-        x_end, y_end = city_positions[j]
+        x_start, y_start = variable_positions[i]
+        x_end, y_end = variable_positions[j]
         plt.plot([x_start, x_end], [y_start, y_end], "r-", lw=2, zorder=4)
     
     plt.title("TSP Itinerary", fontsize=16)
@@ -91,7 +91,7 @@ with col2:
         # Initialize the model
         m = Model("TSP")
 
-        # Variables: x[i, j] = 1 if the salesman travels from city i to city j
+        # Variables: x[i, j] = 1 if the salesman travels from variable i to variable j
         x = m.addVars(
             distances.keys(),
             vtype=GRB.BINARY,
@@ -106,10 +106,20 @@ with col2:
 
         # Add constraints
         for i in range(num_vars):
-            # Ensure each city is left once
+            # Ensure each variable is left once
             m.addConstr(gp.quicksum(x[(i, j)] for j in range(num_vars) if i != j) == 1, name=f"leave_{i}")
-            # Ensure each city is entered once
+            # Ensure each variable is entered once
             m.addConstr(gp.quicksum(x[(j, i)] for j in range(num_vars) if i != j) == 1, name=f"enter_{i}")
+        
+        # Add u variables for subtour elimination
+        u = m.addVars(num_vars, vtype=GRB.CONTINUOUS, name="u")
+
+        # Subtour elimination constraints
+        for i in range(1, num_vars):  # Start from 1 since city 0 is the starting point
+            for j in range(1, num_vars):
+                if i != j:
+                    m.addConstr(u[i] - u[j] + num_vars * x[(i, j)] <= num_vars - 1, name=f"subtour_{i}_{j}")
+
 
         # Solve the problem
         m.optimize()
@@ -122,10 +132,10 @@ with col2:
             for i in range(num_vars):
                 for j in range(num_vars):
                     if i != j and x[(i, j)].x > 0.5:
-                        st.write(f"Travel from {city_names[i]} to {city_names[j]}")
+                        st.write(f"Travel from {variable_names[i]} to {variable_names[j]}")
                         itinerary.append((i, j))
             
             # Plot the solution
-            plot_itinerary(city_positions, city_names, itinerary)
+            plot_itinerary(variable_positions, variable_names, itinerary)
         else:
             st.error("No optimal solution found.")
