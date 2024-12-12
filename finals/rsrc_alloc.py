@@ -55,7 +55,7 @@ for i in range(num_cons):
     # Get the coefficients for each variable
     coefs = []
     for j in range(num_vars):
-        coef = st.number_input(f"Coefficient for {variable_names[i]} {j + 1} in {constraint_name}:", 
+        coef = st.number_input(f"Coefficient for {variable_names[j]} {j + 1} in {constraint_name}:", 
                                value=float(1.0), step=0.5, key=f"coef_{i}_{j}")
         coefs.append(coef)
     constraints_coefs.append(coefs)  # Add this row of coefficients to the matrix
@@ -119,7 +119,7 @@ for j in range(num_vars):
 
 # Solve the model
 model.optimize()
-
+print(model.display())
 
 if st.button("Solve Problem"):
     # Check the status and display results
