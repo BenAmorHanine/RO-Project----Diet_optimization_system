@@ -60,7 +60,7 @@ for constraint in constraints_text:
 
 st.latex("x_{ij} \\in \\{0, 1\\} \\quad \\forall i, j")
 
-col1, col2, col3 = st.columns([1, 3, 1])  # Adjust widths to center the Solve button
+col1, col2, col3 = st.columns([1, 3, 1])
 
 # Function to plot positions and itinerary
 def plot_itinerary(variable_positions, variable_names, itinerary):
@@ -85,19 +85,16 @@ def plot_itinerary(variable_positions, variable_names, itinerary):
     plt.grid(True)
     st.pyplot(plt)
 
-# Add the "Solve TSP" button in the middle column
+#"Solve TSP" button
 with col2:
     if st.button("Solve TSP"):
-        # Initialize the model
         m = Model("TSP")
 
-        # Variables: x[i, j] = 1 if the salesman travels from variable i to variable j
         x = m.addVars(
             distances.keys(),
             vtype=GRB.BINARY,
             name="x"
         )
-
         # Set objective function
         m.setObjective(
             gp.quicksum(distances[(i, j)] * x[(i, j)] for i in range(num_vars) for j in range(num_vars) if i != j),
@@ -111,7 +108,7 @@ with col2:
             # Ensure each variable is entered once
             m.addConstr(gp.quicksum(x[(j, i)] for j in range(num_vars) if i != j) == 1, name=f"enter_{i}")
         
-        # Add u variables for subtour elimination
+        # subtour elimination
         u = m.addVars(num_vars, vtype=GRB.CONTINUOUS, name="u")
 
         # Subtour elimination constraints

@@ -40,25 +40,23 @@ num_cons = st.number_input("Enter the number of constraints:", value=1, step=1, 
 # -------------------------------
 st.subheader("Define Constraints and Their Limits")  # (rhs)
 constraint_names = []
-constraints_coefs = []  # This will store a list of lists (matrix)
+constraints_coefs = []
 constraints_limits = []
 
 for i in range(num_cons):
     st.write(f"**Constraint {i + 1}**")
     col1, col2, col3 = st.columns(3)
     
-    # Get the name of the constraint
     with col1:
         constraint_name = st.text_input(f"Constraint Name {i + 1}:", value=f"Constraint {i + 1}")
         constraint_names.append(constraint_name)
     
-    # Get the coefficients for each variable
     coefs = []
     for j in range(num_vars):
         coef = st.number_input(f"Coefficient for {variable_names[j]} {j + 1} in {constraint_name}:", 
                                value=float(1.0), step=0.5, key=f"coef_{i}_{j}")
         coefs.append(coef)
-    constraints_coefs.append(coefs)  # Add this row of coefficients to the matrix
+    constraints_coefs.append(coefs)
 
     # Get the limit (RHS) for the constraint
     with col3:
@@ -78,7 +76,6 @@ st.write("Subject to:")
 for i in range(num_cons):
     c = constraint_names[i][0]
     limit = constraints_limits[i]
-    # Dynamically generate the LaTeX for each constraint
     st.latex(f"\\sum_{{i}} {c}{{i}} \\cdot x_{{i}} \\geq {limit}")
 # Add non-null constraints
 st.write("And:")
@@ -90,7 +87,7 @@ for j in range(num_vars):
 # Solve the Model
 # -------------------------------
 # Initialize the model
-# Initialize the model
+
 model = Model("Resource Optimization")
 
 # Add decision variables

@@ -22,8 +22,6 @@ st.header("Objective Function:")
 
 cols = st.columns(num_vars+1)
 
-# Select objective (Max or Min) selectbox
-#objective = cols[0].selectbox("Objective:", [ "Min"])
 objective= cols[0].text_input("Objective:", "Min")
 
 
@@ -37,16 +35,13 @@ for i in range(num_vars):
             objective_function_text += f"  {value}x_{i+1}"
             objective_coefficients.append(value)
         else:
-            st.error(f"Coefficient for Food_{i+1} must be greater than 0.")  # Display error for invalid input
+            st.error(f"Coefficient for Food_{i+1} must be greater than 0.")
     except ValueError:
-        st.error(f"Invalid input for Food_{i+1}. Please enter a valid number.")  # Handle non-numeric input
-
+        st.error(f"Invalid input for Food_{i+1}. Please enter a valid number.")
 
 # Set objective function in Gurobi
 m.setObjective(sum([variables[i] * objective_coefficients[i] for i in range(num_vars)]), gp.GRB.MINIMIZE)
 
-
-#objective_function_text = objective_function_text[:-2]
 
 if objective_function_text[1] == "+":
    objective_function_text = objective_function_text[2:]
