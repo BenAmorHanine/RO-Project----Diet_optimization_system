@@ -39,6 +39,33 @@ for i in range(num_vars):
             distances[(i, j)] = dist
             st.write(f"Distance from {variable_names[i]} to {variable_names[j]}: {dist:.2f}")
 
+# blocked routes
+st.subheader("Blocked Routes")
+st.write("Specify the routes that are not allowed.")
+
+num_blocked_routes = st.number_input(
+    "Number of blocked routes:", value=0, step=1, min_value=0, max_value=(num_vars * (num_vars - 1))
+)
+blocked_routes = []
+for i in range(num_blocked_routes):
+    col1, col2 = st.columns(2)
+    with col1:
+        point_from = st.selectbox(f"From (Blocked Route {i+1})", variable_names, key=f"blocked_from_{i}")
+    with col2:
+        point_to = st.selectbox(f"To (Blocked Route {i+1})", variable_names, key=f"blocked_to_{i}")
+    
+    if point_from != point_to:
+        from_index = variable_names.index(point_from)
+        to_index = variable_names.index(point_to)
+        blocked_routes.append((from_index, to_index))
+
+# Display the blocked routes
+if blocked_routes:
+    st.write("Blocked Routes:", blocked_routes)
+else:
+    st.write("No blocked routes specified.")
+
+
 # Display the problem dynamically
 st.header("Mathematical Formulation ")
 
@@ -67,7 +94,8 @@ def plot_itinerary(variable_positions, variable_names, itinerary):
     plt.figure(figsize=(8, 6))
     x_coords = [pos[0] for pos in variable_positions]
     y_coords = [pos[1] for pos in variable_positions]
-    
+
+   
     # Plot variables
     for i, (x, y) in enumerate(variable_positions):
         plt.scatter(x, y, color="blue", s=100, zorder=5)
@@ -116,7 +144,9 @@ with col2:
             for j in range(1, num_vars):
                 if i != j:
                     m.addConstr(u[i] - u[j] + num_vars * x[(i, j)] <= num_vars - 1, name=f"subtour_{i}_{j}")
-
+         # Add constraints for blocked routes
+        for from_index, to_index in blocked_routes:
+            m.addConstr(x[(from_index, to_index)] == 0, name=f"blocked_route_{from_index}_{to_index}")
 
         # Solve the problem
         m.optimize()
